@@ -1,5 +1,5 @@
 let mongoose = require('mongoose')
-
+let bcrypt = require('bcrypt')
 let userSchema = mongoose.Schema({
   local: {
     email: {
@@ -15,7 +15,9 @@ let userSchema = mongoose.Schema({
     id: String,
     token: String,
     email: String,
-    name: String
+    name: String,
+    secret:String
+
   },
   linkedin: {
     id: String,
@@ -33,18 +35,22 @@ let userSchema = mongoose.Schema({
     id: String,
     token: String,
     email: String,
-    name: String
+    name: String,
+    secret:String,
+    displayName: String,
+    userName: String
   }
 
 
 })
 
 userSchema.methods.generateHash = async function(password) {
-  throw new Error('Not Implemented.')
+  return await bcrypt.promise.hash(password, 8)
 }
 
 userSchema.methods.validatePassword = async function(password) {
-  throw new Error('Not Implemented.')
+  console.log('incloming password in validate pass word '+password)
+  return await bcrypt.promise.compare(password, this.local.password)
 }
 
 userSchema.methods.linkAccount = function(type, values) {

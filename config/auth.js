@@ -10,7 +10,7 @@ module.exports = {
         'twitter': {
             'consumerKey': 'dmXpQv9MKJBS65IzMpySKpWzp',
             'consumerSecret': 'wEcsmWxPI6LjuzmEOHWyrg4E2acMqY0Huavq9Gv7n6GbuSkywF',
-            'callbackUrl': 'http://socialauthenticator.com:8000/auth/facebook/callback'
+            'callbackUrl': 'http://socialauthenticator.com:8000/auth/twitter/callback'
         },
         'google': {
             'consumerKey': '1671131356498697',

@@ -13,6 +13,8 @@
 
     <div class="page-header text-center">
         <h1><span class="fa fa-user"></span> Profile Page</h1>
+        <a href="/timeline" class="btn btn-default btn-sm">Timeline</a>
+        <a href="/compose" class="btn btn-default btn-sm">Compose</a>
         <a href="/logout" class="btn btn-default btn-sm">Logout</a>
     </div>
 
@@ -21,50 +23,7 @@
         <div class="alert alert-danger"><%= message %></div>
     <% } %>
 
-    <div class="row">
 
-        <!-- LOCAL INFORMATION -->
-        <div class="col-sm-6">
-            <div class="well">
-                <h3><span class="fa fa-laptop"></span> Local</h3>
-
-                <% if (user.local.email) { %>
-                    <p>
-                        <strong>id</strong>: <%= user._id %><br>
-                        <strong>email</strong>: <%= user.local.email %><br>
-                        <strong>password</strong>: <%= user.local.password %>
-                    </p>
-                    
-                    <a href="/unlink/local" class="btn btn-default">Unlink</a>
-                <% } else { %>
-                    <a href="/connect/local" class="btn btn-default">Connect Local</a>
-                <% } %>
-
-            </div>
-        </div>
-
-        
-        <!-- LinkedIn INFORMATION -->
-        <div class="col-sm-6">
-            <div class="well">
-                <h3 class="text-primary"><span class="fa fa-linkedin"></span> LinkedIn</h3>
-
-                <% if (user.linkedin.token) { %>
-                    <p>
-                        <strong>id</strong>: <%= user.linkedin.id %><br>
-                        <strong>token</strong>: <%= user.linkedin.token %><br>
-                        <strong>email</strong>: <%= user.linkedin.email %><br>
-                        <strong>name</strong>: <%= user.linkedin.name %>
-                    </p>
-
-                    <a href="/unlink/linkedin" class="btn btn-primary">Unlink</a>
-                <% } else { %>
-                    <a href="/connect/linkedin" class="btn btn-primary">Connect LinkedIn</a>
-                <% } %>
-
-            </div>
-        </div>
-    </div>
     <div class="row">
 
         <!-- FACEBOOK INFORMATION -->
@@ -99,7 +58,7 @@
                         <strong>id</strong>: <%= user.twitter.id %><br>
                         <strong>token</strong>: <%= user.twitter.token %><br>
                         <strong>display name</strong>: <%= user.twitter.displayName %><br>
-                        <strong>username</strong>: <%= user.twitter.username %>
+                        <strong>username</strong>: @<%= user.twitter.userName %>
                     </p>
 
                     <a href="/unlink/twitter" class="btn btn-info">Unlink</a>

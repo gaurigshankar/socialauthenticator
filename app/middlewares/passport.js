@@ -3,6 +3,7 @@ let nodeifyit = require('nodeifyit')
 let LocalStrategy = require('passport-local').Strategy
 let User = require('../models/user')
 let util = require('util')
+let _ = require('lodash')
 let FacebookStrategy = require('passport-facebook').Strategy
 let TwitterStrategy = require('passport-twitter').Strategy
     require('songbird')
@@ -11,16 +12,64 @@ function useExternalPassportStrategy(OauthStrategy, config, field) {
   config.passReqToCallback = true
   passport.use(new OauthStrategy(config, nodeifyit(authCB, {spread: true})))
 
-
+  let socialNetworkType = field;
 
   async function authCB(req, token, _ignored_, account) {
     console.log(account.id)
-    if(req.user){
 
+    let userId = account.id;
+    let query ={}
+    if(socialNetworkType === 'facebook'){
+      query['facebook.id'] = userId
+    }
+    else if(socialNetworkType === 'twitter'){
+      query['twitter.id'] = userId
+    }
+    else if(socialNetworkType === 'google'){
+      query['google.id'] = userId
     }
     else{
-
+      throw Error('Invalid Social Network type')
     }
+
+  let user ;
+    if(req && req.user){
+      user = req.user
+    }
+    else{
+      user = await User.promise.findOne(query)
+      if(!user){
+        user = new User({})
+      }
+    }
+    console.log("account.displayName :: "+account.displayName)
+    console.log("account.username :: "+account.username)
+    console.log("account.ignored  :: "+_ignored_)
+  console.log("socialNetworkType :: "+socialNetworkType)
+
+    if(socialNetworkType === 'facebook'){
+      let email = !_.isEmpty(account.emails) ? account.emails[0].value : "not found"
+      user.facebook = {
+          id:userId,
+          token : token,
+          secret: _ignored_,
+         email: email,
+          name: account.displayName
+      }
+    }
+
+    if(socialNetworkType === 'twitter'){
+      console.log("Am i here?***************************************")
+      user.twitter = {
+        id: userId,
+        token: token,
+        secret: _ignored_,
+        displayName: account.displayName,
+        userName: account.username
+      }
+    }
+    console.log("Auth Callback Account info :: "+JSON.stringify(user.twitter))
+    return await user.save()
       // 1. Load user from store
       // 2. If req.user exists, we're authorizing (connecting an account)
       // 2a. Ensure it's not associated with another account
@@ -36,7 +85,7 @@ function useExternalPassportStrategy(OauthStrategy, config, field) {
 function configure(config) {
 
 
-  passport.serializeUser(nodeifyit(async (user) => user._id))
+  passport.serializeUser(nodeifyit(async (user) => user.id))
   passport.deserializeUser(nodeifyit(async (id) => {
     console.log("deserializ called")
     let user = await User.promise.findById(id)
@@ -51,26 +100,19 @@ function configure(config) {
   // passport.use('local-login', new LocalStrategy({...}, (req, email, password, callback) => {...}))
   // passport.use('local-signup', new LocalStrategy({...}, (req, email, password, callback) => {...}))
 
-  passport.use(new LocalStrategy({
+  passport.use('local-login',new LocalStrategy({
     // Use "email" field instead of "username"
-    usernameField: 'username',
-
+    usernameField: 'email',
     failureFlash: true
-  }, nodeifyit(async (username, password) => {
+  }, nodeifyit(async (email, password) => {
     let user
 
-    let email ="";
-    if(username.indexOf('@') > -1){
-      email = username.toLowerCase()
-      user = await User.promise.findOne({email: email})
-    }
-    else{
-      let regexp = new RegExp(username,'i')
-      user = await User.promise.findOne({username: {$regex: regexp}})
-    }
+
+    user = await User.promise.findOne({'local.email' : email})
 
 
-    if (!user || (email === "" && username !== user.username) || (email !== "" && username !==  user.email)) {
+
+    if (!user || user.local.email !== email) {
       return [false, {message: 'Invalid username'}]
     }
 
@@ -83,14 +125,13 @@ function configure(config) {
   passport.use('local-signup', new LocalStrategy({
     // Use "email" field instead of "username"
     usernameField: 'email',
-    passwordField: 'password',
     failureFlash: true,
     passReqToCallback: true
   }, nodeifyit(async (req, email, password) => {
     console.log(" Email in signup stratgey "+email)
     email = (email || '').toLowerCase()
     // Is the email taken?
-    if (await User.promise.findOne({email})) {
+    if (await User.promise.findOne({'local.email' : email})) {
       return [false, {message: 'That email is already taken.'}]
     }
 
@@ -103,7 +144,8 @@ function configure(config) {
     user.local.email = email
 
     // Use a password hash instead of plain-text
-    user.local.password = password
+    user.local.password = await user.generateHash(password)
+
     try{
       return await user.save()
     }
